@@ -9,8 +9,10 @@
 
 import 'package:flutter/material.dart';
 import 'bg.dart';
-import 'dart:async';
 
+import 'dart:async';
+import 'plan.dart';
+import './hero.dart';
 import 'util.dart';
 
 enum GameStatus { loading, play, complete }
@@ -18,12 +20,13 @@ enum Directions { none, left, right, top, bottom }
 
 class MainPainter extends CustomPainter {
   final Background background;
+  final MainHero hero;
   final Size mediaSize;
-
-  MainPainter({this.background, this.mediaSize});
+  MainPainter({this.background, this.hero, this.mediaSize});
   @override
   void paint(Canvas canvas, Size size) {
     background.paint(canvas, size);
+    hero.paint(canvas, size);
     // TODO: implement paint
   }
   @override
@@ -44,7 +47,7 @@ class _GameEnter extends State<GameEnter> with TickerProviderStateMixin  {
   AnimationController controller;
   int index = 0;
   Background background;
-
+  Plan hero;
 
   initState() {
     controller = new AnimationController(
@@ -64,13 +67,15 @@ class _GameEnter extends State<GameEnter> with TickerProviderStateMixin  {
       }
     });
     background = new Background();
-
+    hero = new MainHero();
+    hero.init();
     background.init().then((val) {
       setState(() {
         gameStatus = GameStatus.play;
       });
       showStartAnimation();
     });
+
   }
   void showStartAnimation() {
     controller.forward();
@@ -78,17 +83,31 @@ class _GameEnter extends State<GameEnter> with TickerProviderStateMixin  {
 
 
 
+
   Widget build(BuildContext context) {
     var height = MediaQuery.of(context).size.height;
+
     if (gameStatus == GameStatus.loading) {
       return Center(
         child: Text('Loading', style: TextStyle(decoration: TextDecoration.none)),
       );
     }
+    return GestureDetector(
+      child: CustomPaint(
+          painter: MainPainter(background: background, hero: hero)
+      ),
+      onPanStart: (DragDownDetails) {
+        print("onPanStart $DragDownDetails");
+        hero.moveTo(DragDownDetails.globalPosition.dx, DragDownDetails.globalPosition.dy);
 
-
-    return CustomPaint(
-      painter: MainPainter(background: background),
+      },
+      onPanUpdate: (DragDownDetails) {
+        print("onPanUpdate $DragDownDetails");
+        hero.moveTo(DragDownDetails.globalPosition.dx, DragDownDetails.globalPosition.dy);
+      }
     );
+//    return CustomPaint(
+//      painter: MainPainter(background: background, hero: hero),
+//    );
   }
 }
